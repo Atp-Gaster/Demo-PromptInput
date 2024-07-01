@@ -1,40 +1,76 @@
-import altair as alt
-import numpy as np
-import pandas as pd
 import streamlit as st
 
-"""
-# Welcome to Streamlit!
+# Initialize session state for chat history
+if 'messages' not in st.session_state:
+    st.session_state.messages = []
 
-Edit `/streamlit_app.py` to customize this app to your heart's desire :heart:.
-If you have any questions, checkout our [documentation](https://docs.streamlit.io) and [community
-forums](https://discuss.streamlit.io).
+# Sidebar for user input
+st.sidebar.title("Exxon Chatbot template")
 
-In the meantime, below is an example of what you can do with just a few lines of code:
-"""
+# User input form
+with st.sidebar.form(key='chat_form'):
+    user_message = st.text_input("Your message", "")
+    submit_button = st.form_submit_button(label='Send')
 
-num_points = st.slider("Number of points in spiral", 1, 10000, 1100)
-num_turns = st.slider("Number of turns in spiral", 1, 300, 31)
+# Add user message to chat history and generate a bot response
+if submit_button and user_message:
+    st.session_state.messages.append({"role": "user", "content": user_message})
+    # Simulate a bot response (you can replace this with actual bot logic)
+    bot_response = f"{user_message[::-1]}"
+    st.session_state.messages.append({"role": "bot", "content": bot_response})
+    st.experimental_rerun()
 
-indices = np.linspace(0, 1, num_points)
-theta = 2 * np.pi * num_turns * indices
-radius = indices
+# CSS styles for chat bubbles
+st.markdown("""
+<style>
+.chat-bubble {
+    padding: 10px;
+    border-radius: 15px;
+    margin: 5px;
+    max-width: 60%;
+    color: black;
+}
+.user-bubble {
+    background-color: #DCF8C6;
+    align-self: flex-end;
+    text-align: right;
+}
+.bot-bubble {
+    background-color: #ECECEC;
+    align-self: flex-start;
+}
+.chat-container {
+    display: flex;
+    flex-direction: column;
+}
+.name {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+</style>
+""", unsafe_allow_html=True)
 
-x = radius * np.cos(theta)
-y = radius * np.sin(theta)
+# Display chat messages
+st.title("Chat Messages")
+chat_container = st.empty()
 
-df = pd.DataFrame({
-    "x": x,
-    "y": y,
-    "idx": indices,
-    "rand": np.random.randn(num_points),
-})
-
-st.altair_chart(alt.Chart(df, height=700, width=700)
-    .mark_point(filled=True)
-    .encode(
-        x=alt.X("x", axis=None),
-        y=alt.Y("y", axis=None),
-        color=alt.Color("idx", legend=None, scale=alt.Scale()),
-        size=alt.Size("rand", legend=None, scale=alt.Scale(range=[1, 150])),
-    ))
+with chat_container.container():
+    for message in st.session_state.messages:
+        if message["role"] == "user":
+            st.markdown(f"""
+            <div class='chat-container' style='align-items: flex-end;'>
+                <div class='chat-bubble user-bubble'>
+                    <div class='name'>You:</div>
+                    {message['content']}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            st.markdown(f"""
+            <div class='chat-container' style='align-items: flex-start;'>
+                <div class='chat-bubble bot-bubble'>
+                    <div class='name'>Bot:</div>
+                    {message['content']}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
